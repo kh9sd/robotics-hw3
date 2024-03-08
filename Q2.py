@@ -5,10 +5,6 @@ import random
 import math
 
 
-def is_inlier(pt, circle_center, radius_len):
-    return math.isclose(math.dist(pt, circle_center), radius_len, abs_tol=0.01)
-
-
 def q2(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, float]:
     '''
     Localize a sphere in the point cloud. Given a point cloud as
@@ -53,12 +49,20 @@ def q2(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, float]:
         assert radius_vector.shape == (3,)
 
         circle_center = random_pt - radius_vector
-
+        assert circle_center.shape == (3,)
         inliers_count = 0
-        for pt in P:
-            if is_inlier(pt, circle_center, radius_len):
+
+        # we using numpys vectorized implementations :flushed:
+        circle_center_mapped = np.tile(circle_center, (P.shape[0], 1))
+        assert circle_center_mapped.shape == P.shape
+
+        distance_array = np.linalg.norm(P-circle_center_mapped, axis=1)
+        assert distance_array.shape == (P.shape[0], )
+
+        for dist in distance_array:
+            if math.isclose(dist, radius_len, abs_tol=0.01):
                 inliers_count += 1
-        
+
         if inliers_count > best_inlier_count:
             best_inlier_count = inliers_count
             best = (circle_center, radius_len)
