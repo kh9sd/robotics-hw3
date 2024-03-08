@@ -2,6 +2,7 @@ from typing import Tuple
 import numpy as np
 
 import utils
+import math
 
 
 def q1_a(P: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -45,6 +46,26 @@ def q1_a(P: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return normal, center
 
 
+def get_normal_from_3_pts(a: np.array, b: np.array, c: np.array):
+    assert a.shape == (3,)
+    assert b.shape == (3,)
+    assert c.shape == (3,)
+
+    return np.cross(a-b, c-b)
+
+
+def is_inlier(sample_pt, plane_pt, plane_norm):
+    # pt to pt on plane vector
+    # normal vector
+    # dot product gets us |a||b| cos
+    # divide out length of normal vector
+    diff_vec = sample_pt - plane_pt
+
+    distance = abs(np.dot(diff_vec, plane_norm) / np.linalg.norm(plane_norm))
+
+    return distance < 0.05
+
+
 def q1_c(P: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Fit a plane using RANSAC
@@ -63,6 +84,24 @@ def q1_c(P: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     '''
     
     ### Enter code below
-    center = np.array([0,1,0])
-    normal = np.array([0,0,1])
-    return normal, center
+    best_inlier_count = -math.inf
+    best = None
+
+    for _ in range(100):
+        random_3_pts = P[np.random.choice(P.shape[0], size=3, replace=False), :]
+        assert random_3_pts.shape == (3,3)
+
+        normal = get_normal_from_3_pts(random_3_pts[0], random_3_pts[1], random_3_pts[2])
+
+        inliers_count = 0
+        for pt in P:
+            if is_inlier(pt, random_3_pts[0], normal):
+                inliers_count += 1
+        
+        if inliers_count > best_inlier_count:
+            best_inlier_count = inliers_count
+            best = (normal, np.mean(random_3_pts, axis=0))
+
+    assert best is not None
+    return best
+
