@@ -1,6 +1,13 @@
 from typing import Tuple
 import numpy as np
 
+import random
+import math
+
+
+def is_inlier(pt, circle_center, radius_len):
+    return math.isclose(math.dist(pt, circle_center), radius_len, abs_tol=0.01)
+
 
 def q2(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, float]:
     '''
@@ -28,6 +35,33 @@ def q2(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, float]:
     '''
 
     ### Enter code below
-    center = np.array([1,0.5,0.1])
-    radius = 0.05
-    return center, radius
+    best_inlier_count = -math.inf
+    best = None
+
+    for i in range(500):
+        print(i)
+        random_pt_idx = random.randrange(0, P.shape[0])
+
+        random_pt = P[random_pt_idx]
+        assert random_pt.shape == (3,)
+
+        radius_len = random.uniform(0.05, 0.11)
+
+        radius_vector = N[random_pt_idx]
+        radius_vector /= np.linalg.norm(radius_vector) # normalize
+        radius_vector *= radius_len
+        assert radius_vector.shape == (3,)
+
+        circle_center = random_pt - radius_vector
+
+        inliers_count = 0
+        for pt in P:
+            if is_inlier(pt, circle_center, radius_len):
+                inliers_count += 1
+        
+        if inliers_count > best_inlier_count:
+            best_inlier_count = inliers_count
+            best = (circle_center, radius_len)
+
+    assert best is not None
+    return best
