@@ -50,12 +50,14 @@ def q3(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
         assert random_normals.shape == (2,3)
 
         cylinder_axis = np.cross(random_normals[0], random_normals[1])
+        cylinder_axis /= np.linalg.norm(cylinder_axis)
         assert cylinder_axis.shape == (3,)
 
         radius = random.uniform(0.05, 0.10)
         # finding center
         random_sample_idx = random_idx[0]
-        radius_vector = np.linalg.norm(N[random_sample_idx]) * radius
+        radius_vector = N[random_sample_idx] / np.linalg.norm(N[random_sample_idx]) * radius
+        assert radius_vector.shape == (3,)
         cylinder_center = P[random_sample_idx] + radius_vector
 
         projection_trans = get_plane_projection_trans(cylinder_axis)
