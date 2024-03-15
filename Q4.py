@@ -63,6 +63,14 @@ def q4_a(M: np.ndarray, D: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     # T = np.eye(4)
     return T
 
+"""
+q4_b answer
+
+Using SVD to find a transformation requires that the points in the respective matrices
+are corresponding. In the case of noisy data, while this might add a bit of error into
+the result, the general assumption of corresponding points still holds. However, shuffling
+the points order completely destroys that, so the algorithm fails
+"""
 
 def q4_c(M: np.ndarray, D: np.ndarray) -> np.ndarray:
     '''
