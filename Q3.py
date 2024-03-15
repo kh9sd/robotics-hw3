@@ -60,17 +60,17 @@ def q3(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
         assert radius_vector.shape == (3,)
         cylinder_center = P[random_sample_idx] + radius_vector
 
+        center_mapped = np.tile(cylinder_center, (P.shape[0], 1))
+        assert center_mapped.shape == P.shape
+
+        centered_pts = P - center_mapped
+
         projection_trans = get_plane_projection_trans(cylinder_axis)
 
-        projected_pts = (projection_trans @ P.T).T
+        projected_pts = (projection_trans @ centered_pts.T).T
         assert projected_pts.shape == P.shape
 
-        projected_center = projection_trans @ cylinder_center
-
-        projected_center_mapped = np.tile(projected_center, (P.shape[0], 1))
-        assert projected_center_mapped.shape == P.shape
-
-        distance_array = np.linalg.norm(projected_pts-projected_center_mapped, axis=1)
+        distance_array = np.linalg.norm(projected_pts, axis=1)
         assert distance_array.shape == (P.shape[0], )
 
         inliers_count = 0
@@ -87,6 +87,5 @@ def q3(P: np.ndarray, N: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
     assert best_center is not None
     assert best_axis is not None
     assert best_radius is not None
-    print(best_center)
-    print(best_axis)
+
     return best_center, best_axis, best_radius
