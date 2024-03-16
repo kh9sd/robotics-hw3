@@ -45,6 +45,13 @@ def q1_a(P: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
     return normal, center
 
+"""
+q1_b answer
+
+this plane doesn't match the plane that well because all of the outliers add bias to the calculations,
+for example the center of the plane is shifted due to how the outliers add weight and this also screws
+up our covariance matrix implementation.
+"""
 
 def get_normal_from_3_pts(a: np.array, b: np.array, c: np.array):
     assert a.shape == (3,)
@@ -66,6 +73,12 @@ def is_inlier(sample_pt, plane_pt, plane_norm):
     return distance < 0.05
 
 
+"""
+this q1_c uses RANSAC with random sampling to efficiently sample candidates and disregard outliers
+
+compared to q1_a which is more of a closed form solution, q1_c is more robust on bad datasets, but
+also adds a layer of nondeterminism due to its random approach
+"""
 def q1_c(P: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Fit a plane using RANSAC
