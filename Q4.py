@@ -72,6 +72,57 @@ the result, the general assumption of corresponding points still holds. However,
 the points order completely destroys that, so the algorithm fails
 """
 
+def closest_neighbor_from_to(from_pc: np.ndarray, to_pc: np.ndarray) -> np.ndarray:
+    closest_correspondences_list = []
+
+    for pt in from_pc:
+        assert pt.shape == (3,)
+
+        pt_mapped = np.tile(pt, (to_pc.shape[0], 1))
+        assert pt_mapped.shape == to_pc.shape
+
+        distance_array = np.linalg.norm(to_pc-pt_mapped, axis=1)
+        assert distance_array.shape == (to_pc.shape[0], )
+
+        closest_pt_index = np.argmin(distance_array)
+
+        closest_correspondences_list.append(to_pc[closest_pt_index])
+
+    result = np.array(closest_correspondences_list)
+    assert result.shape == from_pc.shape
+
+    return result
+
+
+def pad_for_homogeneous_trans(A: np.ndarray) -> np.ndarray:
+    assert A.ndim == 2
+    assert A.shape[1] == 3
+
+    current = np.ones((A.shape[0], 4))
+    current[:, :3] = A
+    assert current.shape == (A.shape[0], 4)
+
+    return current
+
+
+def apply_homo_trans(T: np.ndarray, points: np.ndarray) -> np.ndarray:
+    assert T.shape == (4,4)
+    assert points.shape[1] == 3
+
+    padded_points = pad_for_homogeneous_trans(points)
+    assert padded_points.shape == (points.shape[0], 4)
+
+    result = T @ padded_points.T
+    assert result.shape == (4, points.shape[0])
+
+    final_result = result.T
+    assert final_result.shape == (points.shape[0], 4)
+    final_result = final_result[:, 0:3]
+    assert final_result.shape == points.shape
+
+    return final_result
+
+
 def q4_c(M: np.ndarray, D: np.ndarray) -> np.ndarray:
     '''
     Solves iterative closest point (ICP) to generate transformation T to best
@@ -95,5 +146,23 @@ def q4_c(M: np.ndarray, D: np.ndarray) -> np.ndarray:
     '''
 
     ### Enter code below
-    T = np.eye(4)
-    return T
+
+    ITERATION_LIMIT = 100
+    current, TARGET = M, D
+
+    cur_trans = np.eye(4)
+
+    for i in range(ITERATION_LIMIT):
+        print(i)
+
+        closest_correspondence_matrix = closest_neighbor_from_to(current, TARGET)
+        assert closest_correspondence_matrix.shape == current.shape
+        next_trans = q4_a(current, closest_correspondence_matrix)
+
+        cur_trans = next_trans @ cur_trans
+        assert cur_trans.shape == (4,4)
+
+        current = apply_homo_trans(next_trans, current)
+        assert current.shape == (M.shape[0], 3)
+
+    return cur_trans
